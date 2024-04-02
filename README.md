@@ -2,7 +2,7 @@
 
 Convert files with simple features data (Shape, GeoJSON, etc) to newline delimited JSON files that can be imported into BigQuery. Schema files are also generated that can be used to create BigQuery tables programmatically or through the BigQuery Console.
 
-The program uses the GDAL library to convert the source file to a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file, and then uses it to create the newline delimited JSON file. The GeoJSONSeq file is deleted afterward, unless the -k / --keep_geojsonseq option is used.
+The program uses the GDAL library to convert the source file to a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file, and then uses it to create the newline delimited JSON file. The GeoJSONSeq file is deleted afterward, unless the &#x2011;k / &#x2011;&#x2011;keep_geojsonseq option is used.
 
 **WARNING: This was intended/started as a coding exercise, and is not production-ready code. There is very little error handling or checking if you are about to do something really bad! Use at your own risk!**
 
@@ -24,7 +24,7 @@ The program uses the GDAL library to convert the source file to a [GeoJSONSeq](h
 - Python 3.10.x (this was developed with Python 3.10.12, but an earlier version may work).
 - [GDAL](https://gdal.org) installed on your system
   - On Ubuntu 22.04.03, the following installed all necessary packages: `sudo apt install gdal-bin libgdal-dev`. You can add *python3-gdal* to the package list, but in my case it was included as an "*additional package*" when installing *gdal-bin*.
-- Python bindings for your version of GDAL, which ideally would be what `pip install GDAL` installs by default. However, I needed an earlier/specific version to match my native GDAL library (3.4.1, which is the version specified in requirements.txt). Try this if pip is giving errors when installing GDAL: `pip install GDAL=="$(gdal-config --version).*"` See the [*pip* section of the GDAL documentation](https://gdal.org/api/python_bindings.html#pip).
+- Python bindings for your version of GDAL, which ideally would be what `pip install GDAL` installs by default. However, I needed an earlier/specific version to match my native GDAL library (3.4.1, the version specified in requirements.txt). Try this if pip is giving errors when installing GDAL: `pip install GDAL=="$(gdal-config --version).*"` See the [*pip* section of the GDAL documentation](https://gdal.org/api/python_bindings.html#pip).
 
 ## Usage
 
@@ -36,12 +36,12 @@ The program uses the GDAL library to convert the source file to a [GeoJSONSeq](h
 | ----------- | ----------- |
 | source | Path to the source file or directory to convert. |
 
-*Note: positional arguments can appear before or after all options. Both of the following examples are valid and will do the same thing:*
+*Note: positional arguments can be placed at the very beginning or very end, and the order of the options do not matter. Both of the following examples are valid and will do the same thing:*
 ```
-python ogr2bqjson.py -o /output_dir/baz.json /source_dir/foo.bar
+python ogr2bqjson.py -k -p -o /output_dir/baz.json /source_dir/foo.bar
 ```
 ```
-python ogr2bqjson.py /source_dir/foo.bar -o /output_dir/baz.json
+python ogr2bqjson.py /source_dir/foo.bar -p -o /output_dir/baz.json -k
 ```
 
 
@@ -49,7 +49,7 @@ python ogr2bqjson.py /source_dir/foo.bar -o /output_dir/baz.json
 
 | Option | Description |
 | ----------- | ----------- |
-| -h, --help | Show help message and exit. |
+| -h, &#x2011;&#x2011;help | Show help message and exit. |
 | -f, &#x2011;&#x2011;force_overwrite | Overwrite files if they already exist, otherwise an underscore and number ("_n") will be appended to the output file's name: duplicate_01.json, duplicate_02.json, etc. |
 | -k, &#x2011;&#x2011;keep_geojsonseq | Do not delete the GeoJSONSeq files created when a source file is not [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) with a WGS84 reference system. |
 | -p, &#x2011;&#x2011;create_parents | Make directories and parent directories for output files, if they don't already exist. |
@@ -100,12 +100,12 @@ python ogr2bqjson.py -c "{\"geometry\":\"geometry\"}" /source_dir/foo.bar
 
 ## Output Files
 
-- **filename.json**: A file containing the geographic features, one per line, in newline delimited JSON (ndjson) format, that can be imported into a BigQuery table. The schema will consist of the following columns, unless the *--convert_options* and/or *--columns* flags are used to alter them:
+- **filename.json**: A file containing the geographic features, one per line, in newline delimited JSON (ndjson) format, that can be imported into a BigQuery table. The schema will consist of the following columns, unless the *&#x2011;&#x2011;convert_options* and/or *&#x2011;&#x2011;columns* flags are used to alter them:
   - **geometry**: The feature's geometry member importable as a [GEOGRAPHY data type](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type)
   - **geojson**: The entire feature, including properties and geometry, as a GeoJSON WGS84 formatted STRING
   - One column for each item within the *properties* member of the features
-- **filename_SCHEMA.json**: A file containing a json version of the schema that can be used to programmatically create a table in BigQuery. Use the *--skip_schema* option to prevent this file from being created
-- **filename_SCHEMA.txt**: A plaintext file that can be used to copy/paste the schema when using the BigQuery Console to create a table. Use the *--skip_schema* option to prevent this file from being created
+- **filename_SCHEMA.json**: A file containing a json version of the schema that can be used to programmatically create a table in BigQuery. Use the *&#x2011;&#x2011;skip_schema* option to prevent this file from being created
+- **filename_SCHEMA.txt**: A plaintext file that can be used to copy/paste the schema when using the BigQuery Console to create a table. Use the *&#x2011;&#x2011;skip_schema* option to prevent this file from being created
 - **filename_GeoJSONSeq.geojson**: The GeoJSONSeq file temporalty created, and then deleted, during the conversion process.
 
 ## Tips / Troubleshooting
@@ -113,7 +113,7 @@ python ogr2bqjson.py -c "{\"geometry\":\"geometry\"}" /source_dir/foo.bar
 ### Duplicate vertex errors when importing into BigQuery
 If you are not able to import the newline delimited JSON file into BigQuery because it complains that an edge has a duplicate vertex with another, try the following:
 
-- use the *--columns* / *-c* option with only the "geojson" column included (leave out "geometry")
+- use the *&#x2011;&#x2011;columns* / *&#x2011;c* option with only the "geojson" column included (leave out "geometry")
 ```
 python ogr2bqjson.py -c "{\"geojson\":\"geojson\"}" /source_dir/foo.bar
 ```
@@ -144,4 +144,4 @@ python ogr2bqjson.py -v='-if "ESRI Shapefile"' /source_dir/foo.bar
 ## TODO
 
 - [ ] Unit tests
-- [ ] Fix/prevent overlapping shapes, or warn the user if there are any
+- [ ] Fix/prevent duplicate vertex issue, and/or warn the user if there are any
