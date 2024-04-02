@@ -124,7 +124,7 @@ def add_args_to_parser(parser: argparse.ArgumentParser) -> None:
     'Cannot include the following options: '
     f'{ ", ".join(reserved_convert_options) }. For example, to change the '
     'column names of feature properties (equals sign is necessary):'
-    '-v=\'-sql "SELECT geometry, attr1 AS foo, attr2 AS bar FROM source_basename"\''
+    '-v=\'-sql "SELECT attr1 AS foo, attr2 AS bar FROM source_basename"\''
   ))
 
 

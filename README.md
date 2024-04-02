@@ -84,7 +84,7 @@ python ogr2bqjson.py /source_dir/ -e shp -d /output_dir
 
 **Limit and/or rename the *properties* attributes in the schema.** *The `=` after `-v` is required if any part of the string contains a hyphen.*
 ```
-python ogr2bqjson.py -v='-sql "SELECT geometry, attr1, attr2 AS qux FROM foo"' /source_dir/foo.bar
+python ogr2bqjson.py -v='-sql "SELECT attr1, attr2 AS qux FROM foo"' /source_dir/foo.bar
 ```
 
 **Rename the *geometry* column in the schema.**
@@ -121,7 +121,7 @@ python ogr2bqjson.py -c "{\"geojson\":\"geojson\"}" /source_dir/foo.bar
 - Add a column with the GEOGRAPHY datatype to the table's schema, called *geometry* (or whatever else you want)
 - Use BigQuery's [ST_GEOGFROMGEOJSON()](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogfromgeojson) function in a SQL query to populate the *geometry* column using the value from the *geojson* column
 ```sql
-UPDATE my_ds.my_table SET geometry = ST_GEOGFROMGEOJSON(geojson) WHERE geometry IS NULL;
+UPDATE my_ds.my_table SET geometry = ST_GEOGFROMGEOJSON(geojson, make_valid => TRUE) WHERE geometry IS NULL;
 ```
 
 ### Error creating temporary GeoJSONSeq file
