@@ -91,13 +91,6 @@ def add_args_to_parser(parser: argparse.ArgumentParser) -> None:
     'the --force_overwrite / -f option is ignored for the GeoJSONSeq file. It '
     'will never overwrite an existing file, and will be given a unique name.'
 	))
-  parser.add_argument('-p', '--create_parents', action='store_true', help=(
-		'Make directories and parent directories for output files, if they don\'t '
-    'already exist.'
-	))
-  parser.add_argument('-s', '--skip_schemas', action='store_true', help=(
-		'Skip generating schema files.'
-	))
   parser.add_argument(
     '-c',
     '--columns',
@@ -134,12 +127,19 @@ def add_args_to_parser(parser: argparse.ArgumentParser) -> None:
     ' the --output_directory / -d option to save the file with the same '
     ' basename as the source, but to a different directory.'
 	))
+  parser.add_argument('-p', '--create_parents', action='store_true', help=(
+		'Make directories and parent directories for output files, if they don\'t '
+    'already exist.'
+	))
+  parser.add_argument('-s', '--skip_schemas', action='store_true', help=(
+		'Skip generating schema files.'
+	))
   parser.add_argument('-v', '--convert_options', default='', help=(
     'String containing options to pass to GDAL VectorTranslate() during '
     ' conversion. These are the same options you would use with ogr2org2 on the '
     'cli (see https://gdal.org/programs/ogr2ogr.html or type "ogr2ogr --help"). '
     'Cannot include the following options: '
-    f'{ ", ".join(reserved_convert_options) }. For example, to change the '
+    f'{", ".join(reserved_convert_options)}. For example, to change the '
     'column names of feature properties (equals sign is necessary):'
     '-v=\'-sql "SELECT attr1 AS foo, attr2 AS bar FROM source_basename"\''
   ))
