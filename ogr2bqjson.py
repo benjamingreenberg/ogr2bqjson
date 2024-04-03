@@ -40,6 +40,13 @@ def main():
       skip_schemas=args.skip_schemas,
     )
   else:
+    output_filepath = args.output_filepath
+    if output_filepath:
+      output_filepath = get_safe_filepath(
+        output_filepath,
+        args.force_overwrite,
+        True)
+
     output_filepath, schema = convert_to_ndjson(
       args.source,
       can_overwrite=args.force_overwrite,
@@ -47,7 +54,7 @@ def main():
       convert_options=args.convert_options,
       do_keep_geojsonseq=args.keep_geojsonseq,
       output_directory=args.output_directory,
-      output_filepath=args.output_filepath,
+      output_filepath=output_filepath,
     )
 
     if not args.skip_schemas:
