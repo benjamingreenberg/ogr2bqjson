@@ -158,18 +158,11 @@ def get_arg_errors(args: argparse.Namespace) -> str | None:
   if source_errors:
     return source_errors
 
-  if args.extension and os.path.isfile(args.source):
-    return ('Invalid Option: The --extension / -e option cannot be used when '
-            'the source path is to a file.')
-  elif not args.extension and os.path.isdir(args.source):
-    return ('Missing Option: --extension / -e required when the source path is '
-            'to a directory.')
-
   if args.convert_options:
     for option in reserved_convert_options:
       if option in args.convert_options:
         return (f'Invalid Option: "{option}" is reserved and cannot be used '
-                'within --convert_options')
+                'within --convert_options / -v')
 
   if (args.output_directory
       and not is_output_directory_safe(args.output_directory, args.create_parents)):
@@ -204,13 +197,13 @@ def get_source_errors(source_path: str, should_be_dir: bool | None = False) -> s
     return f'Invalid Source: "{ source_path }" does not exist.'
 
   if should_be_dir:
-    if not os.path.isdir(source_path):
-      return ('Invalid Source: The source must be a directory when using the '
-              '--extension / -e option.')
+    if os.path.isfile(source_path):
+      return ('Invalid Option: The --extension / -e option cannot be used when '
+              'the source path is to a file.')
   else:
-    if not os.path.isfile(source_path):
-      return ('Invalid Source: The --extension / -e option is required when the '
-              'source is a directory.')
+    if os.path.isdir(source_path):
+      return ('Missing Option: --extension / -e is required when the source '
+              'path is to a directory.')
     elif not is_supported_geofile(source_path):
       return (f'Invalid Source: "{ source_path }" is not recognized as a '
               'supported geofile format by gdal.')
