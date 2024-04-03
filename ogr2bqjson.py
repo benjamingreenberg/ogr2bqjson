@@ -8,6 +8,7 @@ import ndjson
 from osgeo import gdal
 
 reserved_convert_options = ['-f', '-of', '-t_srs']
+default_column_names = ['geometry', 'geojson', 'geojson_geometry']
 
 
 def main():
@@ -24,7 +25,10 @@ def main():
       # Error already printed to the console.
       sys.exit()
 
-  columns = json.loads(args.columns)
+  columns = get_columns(args.columns)
+  if columns is False:
+    # Whatever the issue is, it was already printed to the console.
+    sys.exit()
   if args.extension:
     convert_all(
       args.source,
@@ -100,11 +104,18 @@ def add_args_to_parser(parser: argparse.ArgumentParser) -> None:
     default='{"geometry":"geometry","geojson":"geojson"}',
     help=(
       'JSON string to limit or rename the columns for geographic data in the '
-      'output\'s schema. Use the key "geometry" for renaming the GEOGRAPHY'
-      'datatype column, and "geojson" for the STRING column. Leaving out a '
-      'column will result in it not being included in the schema. See '
-      '--convert_options / -v to limit or rename the columns for properties.'
-      'Example: -c "{\\"geometry\\":\\"foo\\",\\"geojson\\":\\"bar\\"}"'
+      'output\'s schema. Use a JSON array literal if you want to limit which '
+      'columns to include without changing their default names, and a JSON '
+      'object to limit and/or rename columns. "geometry" refers to the '
+      'column that will contain the geometry as a GEOGRAPHY datatype; "geojson" '
+      'the column that will have a complete copy of a geo object as a GeoJSON '
+      'formatted STRING; and "geojson_geometry" the column containing just the '
+      'geometry object as a GeoJSON formatted STRING. Leaving out a column will '
+      'result in it being excluded from the schema. Note: the "geojson_geometry" '
+      'column is excluded by default. See --convert_options / -v for info '
+      'about limiting or renaming the "properties" columns. Examples:\n'
+      'Rename columns: -c "{\\"geometry\\":\\"foo\\",\\"geojson\\":\\"bar\\"}"\n'
+      'Include geojson_geometry: -c "[\\"geometry\\",\\"geojson\\"\\"geojson_geometry\\"]'
     )
   )
   parser.add_argument('-d', '--output_directory', help=(
@@ -314,6 +325,40 @@ def create_missing_directories( path:str, is_dir:bool | None = False ) -> bool:
   return True
 
 
+def get_columns( columns_args ):
+  if columns_args == '':
+    print('--columns / -c contained an empty string. No geographic columns will '
+          'be included in the schema.')
+    return {}
+  try:
+    user_columns = json.loads(columns_args)
+  except Exception as err:
+    print('Invalid Columns: An error occurred when attempting to parse the '
+          f'value for --columns / -c: "{err}". Make sure you entered valid JSON '
+          'and have escaped quotation marks with a backslash ("value" should be '
+          '\\"value\\")')
+    return False
+
+  columns = {}
+  if not user_columns:
+    print('--columns / -c contained an empty JSON object or array. No '
+          'geographic columns will be included in the schema.')
+  elif isinstance(user_columns, dict):
+    columns = user_columns
+  else:
+    for column in user_columns:
+      if column in default_column_names:
+        columns[column] = column
+      else:
+        print(f'Unknown column "{column}".')
+    if not columns:
+      print( 'Invalid Columns: All column names given in --columns / -c were '
+            f'invalid. Valid column names are: {", ".join(default_column_names)}. '
+            'Unable to continue.')
+      columns = False
+  return columns
+
+
 def convert_all(
     source_directory: str,
     target_extension: str,
@@ -475,13 +520,16 @@ def geojson_to_ndjson(
         row[columns['geometry']] = json.dumps(line_item['geometry'], ensure_ascii=False)
       if 'geojson' in columns:
         row[columns['geojson']] = json.dumps(line_item, ensure_ascii=False)
-
+      if 'geojson_geometry' in columns:
+        row[columns['geojson_geometry']] = json.dumps(line_item['geometry'], ensure_ascii=False)
       rows.append(row)
 
   if 'geometry' in columns:
       schema[columns['geometry']] = 'GEOGRAPHY'
   if 'geojson' in columns:
       schema[columns['geojson']] = 'STRING'
+  if 'geojson_geometry' in columns:
+      schema[columns['geojson_geometry']] = 'STRING'
 
   with open(output_filepath, 'w+') as json_file:
     ndjson.dump(rows, json_file)

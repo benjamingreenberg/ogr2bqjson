@@ -54,7 +54,7 @@ python ogr2bqjson.py /source_dir/foo.bar -p -o /output_dir/baz.json -k
 | -k, &#x2011;&#x2011;keep_geojsonseq | Do not delete the GeoJSONSeq files created when a source file is not [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) with a WGS84 reference system. |
 | -p, &#x2011;&#x2011;create_parents | Make directories and parent directories for output files, if they don't already exist. |
 | -s, &#x2011;&#x2011;skip_schemas | Skip generating schema files.|
-| -c, &#x2011;&#x2011;columns | JSON string to limit or rename the columns for geographic data in the output's schema. Use the key "geometry" for renaming the GEOGRAPHY datatype column, and "geojson" for the STRING column. Leaving out a column will result in it not being included in the schema. |
+| -c, &#x2011;&#x2011;columns | JSON string to limit or rename the columns for geographic data in the output's schema. Use a JSON array literal if you want to limit which columns to include without changing their default names, and a JSON object to limit and/or rename columns. "geometry" refers to the column that will contain the geometry as a GEOGRAPHY datatype; "geojson" the column that will have a complete copy of a geo object as a GeoJSON formatted STRING; and "geojson_geometry" the column containing just the geometry object as a GeoJSON formatted STRING. Leaving out a column will result in it being excluded from the schema. Note: the "geojson_geometry" column is excluded by default. |
 | -d, &#x2011;&#x2011;output_directory | The path to the directory to save converted files to. The files will be given the same basename as the source, but with .json as the extension. Ignored if the &#x2011;&#x2011;output_filepath option is present. |
 | -e, &#x2011;&#x2011;extension | Extension of the files to convert when the source path is a directory. Cannot be used when the source path is a file. |
 | -o, &#x2011;&#x2011;output_filepath | The full filepath to save the converted file to. If omitted the file will be saved with the same basename and location as the source, but with the .json extension. Cannot be used when the source path is a directory. |
@@ -94,15 +94,21 @@ python ogr2bqjson.py -c "{\"geometry\":\"baz\",\"geojson\":\"geojson\"}" /source
 
 **Exclude the *geojson* column from the schema.**
 ```
-python ogr2bqjson.py -c "{\"geometry\":\"geometry\"}" /source_dir/foo.bar
+python ogr2bqjson.py -c "[\"geometry\"]" /source_dir/foo.bar
+```
+
+**Include the *geojson_geometry* column in the schema.**
+```
+python ogr2bqjson.py -c "[\"geometry\",\"geojson\",\"geojson_geometry\"]" /source_dir/foo.bar
 ```
 
 
 ## Output Files
 
 - **filename.json**: A file containing the geographic features, one per line, in newline delimited JSON (ndjson) format, that can be imported into a BigQuery table. The schema will consist of the following columns, unless the *&#x2011;&#x2011;convert_options* and/or *&#x2011;&#x2011;columns* flags are used to alter them:
-  - **geometry**: The feature's geometry member importable as a [GEOGRAPHY data type](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type)
-  - **geojson**: The entire feature, including properties and geometry, as a GeoJSON WGS84 formatted STRING
+  - **geometry**: The feature's geometry member importable as a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) datatype
+  - **geojson**: The entire feature, including properties and geometry, as a GeoJSON WGS84 formatted STRING.
+  - **geojson_geometry**: The feature's geometry member as a GeoJSON WGS84 formatted STRING. *Note: This column is excluded from the schema by default. Use the &#x2011;&#x2011;columns / &#x2011;c option to have it included*.
   - One column for each item within the *properties* member of the features
 - **filename_SCHEMA.json**: A file containing a json version of the schema that can be used to programmatically create a table in BigQuery. Use the *&#x2011;&#x2011;skip_schema* option to prevent this file from being created
 - **filename_SCHEMA.txt**: A plaintext file that can be used to copy/paste the schema when using the BigQuery Console to create a table. Use the *&#x2011;&#x2011;skip_schema* option to prevent this file from being created
@@ -111,17 +117,17 @@ python ogr2bqjson.py -c "{\"geometry\":\"geometry\"}" /source_dir/foo.bar
 ## Tips / Troubleshooting
 
 ### Duplicate vertex errors when importing into BigQuery
-If you are not able to import the newline delimited JSON file into BigQuery because it complains that an edge has a duplicate vertex with another, try the following:
+If you are not able to import the newline delimited JSON file into BigQuery because it complains that an edge has a duplicate vertex with another edge, try the following:
 
-- use the *&#x2011;&#x2011;columns* / *&#x2011;c* option with only the "geojson" column included (leave out "geometry")
+- use the *&#x2011;&#x2011;columns* / *&#x2011;c* option to include the  "geojson_geometry" column, and exclude the "geometry" column (by omitting it). It is your choice whether to include the "geojson" column.
 ```
-python ogr2bqjson.py -c "{\"geojson\":\"geojson\"}" /source_dir/foo.bar
+python ogr2bqjson.py -c "[\"geojson_geometry\",\"geojson\"]" /source_dir/foo.bar
 ```
 - Import into a new BigQuery table
 - Add a column with the GEOGRAPHY datatype to the table's schema, called *geometry* (or whatever else you want)
-- Use BigQuery's [ST_GEOGFROMGEOJSON()](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogfromgeojson) function in a SQL query to populate the *geometry* column using the value from the *geojson* column
+- Use BigQuery's [ST_GEOGFROMGEOJSON()](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogfromgeojson) function in a SQL query to populate the *geometry* column using the value from the *geojson_geometry* column.
 ```sql
-UPDATE my_ds.my_table SET geometry = ST_GEOGFROMGEOJSON(geojson, make_valid => TRUE) WHERE geometry IS NULL;
+UPDATE my_proj_id.my_ds.my_table SET geometry = ST_GEOGFROMGEOJSON(geojson_geometry, make_valid => TRUE) WHERE geometry IS NULL;
 ```
 
 ### Error creating temporary GeoJSONSeq file
