@@ -11,15 +11,7 @@ reserved_convert_options = ['-f', '-of', '-t_srs']
 
 
 def main():
-  parser = argparse.ArgumentParser(
-    description=(
-      'Convert files with simple features data (shp, geojson, etc) to newline '
-      'delimited JSON files that can be imported into BigQuery. Schema files '
-      'are also generated that can be used to create BigQuery tables '
-      'programmatically or through the BigQuery Console.'
-    )
-  )
-  add_args_to_parser(parser)
+  parser = get_args_parser()
   args = parser.parse_args()
   arg_error = get_arg_errors(args)
   if arg_error:
@@ -57,6 +49,20 @@ def main():
     if not args.skip_schemas:
       path_root = os.path.splitext(output_filepath)[0]
       save_schema_files(schema, path_root, can_overwrite=args.force_overwrite)
+
+
+def get_args_parser():
+  parser = argparse.ArgumentParser(
+    description=(
+      'Convert files with simple features data (shp, geojson, etc) to newline '
+      'delimited JSON files that can be imported into BigQuery. Schema files '
+      'are also generated that can be used to create BigQuery tables '
+      'programmatically or through the BigQuery Console.'
+    )
+  )
+
+  add_args_to_parser(parser)
+  return parser
 
 
 def add_args_to_parser(parser: argparse.ArgumentParser) -> None:
