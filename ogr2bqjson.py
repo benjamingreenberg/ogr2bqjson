@@ -177,17 +177,13 @@ def get_arg_errors(args: argparse.Namespace) -> str | None:
             'Use the --create_parents option to create missing directories and '
             'their parents during execution.')
 
-  if args.output_filepath:
-    if is_output_file_safe(args.output_filepath, args.force_overwrite) is False:
-      return (f'Invalid Output File: "{args.output_filepath}" already exists. Use '
-              'the --force_overwrite / -f option if you want to overwrite it.')
-    elif not is_output_directory_safe(
-        os.path.splitext(args.output_filepath)[0],
-        args.create_parents
-      ):
-      return (f'Invalid Output File: Cannot create "{args.output_filepath}" because '
-              'its directory does not exists. Use the --create_parents option '
-              'to create missing directories and their parents during execution.')
+  output_file_path_errors = get_output_file_args_errors(
+    args.output_filepath,
+    args.force_overwrite,
+    args.create_parents
+  )
+  if output_file_path_errors:
+    return output_file_path_errors
 
 
 def get_source_errors(source_path: str, should_be_dir: bool | None = False) -> str | None:
@@ -281,6 +277,43 @@ def is_output_directory_safe(
       bool: True if the directory exists or can_create_parents is True, otherwise False.
   """
   return can_create_parents or os.path.exists(dir_path)
+
+
+def get_output_file_args_errors(output_filepath, can_overwrite, can_create_parents ) -> str | None:
+  if output_filepath:
+    if is_output_file_safe(output_filepath, can_overwrite) is False:
+      safe_file = get_safe_filepath(output_filepath)
+      print (
+        f'\nThe output file "{output_filepath}" already exists.\n'
+        f'Do you want to save the converted file to "{safe_file}" instead?\n'
+        'Note: use -f / --force_overwrite in the future to overwrite existing '
+        'files automatically.'
+      )
+      do_exit = False
+      while True:
+        answer = input(
+          '\nType "1" to use the new file, "2" to overwrite the existing file, '
+          '"3" (or nothing) to exit, then press Enter:\n')
+        if answer == '1':
+            print(f'Will save output to {safe_file}')
+            break
+        elif answer == '2':
+            print(f'Will overwrite {output_filepath}')
+            break
+        elif not answer or answer == '3':
+            do_exit = True
+            break
+
+      if do_exit:
+        return 'Exiting'
+    elif not is_output_directory_safe(
+        os.path.splitext(output_filepath)[0],
+        can_create_parents):
+      return (
+        f'Invalid Output File: Cannot create "{output_filepath}" because '
+        'its directory does not exists. Use the --create_parents option to '
+        'create missing directories and their parents during execution.'
+      )
 
 
 def is_output_file_safe(filepath: str, can_overwrite: bool) -> bool:
