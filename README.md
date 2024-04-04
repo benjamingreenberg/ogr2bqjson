@@ -1,6 +1,6 @@
 # ogr2bqjson
 
-Convert files with simple features data (Shape, GeoJSON, etc) to [newline-delimited JSON](https://jsonlines.org/) to be [imported into a BigQuery table](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json) with the feature's geometry in a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) column. [Schema files](https://cloud.google.com/bigquery/docs/schemas) are also generated that can be used for creating BigQuery tables programmatically or through the BigQuery Console.
+Convert files with simple features data (Shape, GeoJSON, etc) to [newline-delimited JSON](https://jsonlines.org/) for [importing into a BigQuery table](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json) with the feature's geometry in a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) column. Schema files are also generated that can be used to [define a BigQuery table's schema](https://cloud.google.com/bigquery/docs/schemas) programmatically or through the BigQuery Console.
 
 ogr2bqjson gets its name from GDAL's [ogr2ogr](https://gdal.org/programs/ogr2ogr.html) program. The GDAL library is used to convert the source file to a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file, using it to then create the newline-delimited JSON file. The GeoJSONSeq file is deleted afterward, unless the *&#x2011;&#x2011;keep_geojsonseq / &#x2011;k* option is used.
 
