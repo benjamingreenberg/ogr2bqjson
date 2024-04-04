@@ -5,7 +5,7 @@ Convert files with simple features data (Shape, GeoJSON, etc) to newline delimit
 The program uses the GDAL library to convert the source file to a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file, and then uses it to create the newline delimited JSON file. The GeoJSONSeq file is deleted afterward, unless the *&#x2011;&#x2011;keep_geojsonseq / &#x2011;k* option is used.
 
 ## Warning
-**This was intended/started as a coding exercise, and is not production-ready code. There is very little error handling or checking if you are about to do something really bad! Use at your own risk!**
+**This was intended/started as a coding exercise, and is not production-ready code. Use at your own risk!**
 
 ## Table of Contents
 
