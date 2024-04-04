@@ -1,8 +1,8 @@
 # OGR 2 BigQuery JSON
 
-Convert files with simple features data (Shape, GeoJSON, etc) to newline delimited JSON files that can be imported into BigQuery. Schema files are also generated that can be used to create BigQuery tables programmatically or through the BigQuery Console.
+Convert files with simple features data (Shape, GeoJSON, etc) to newline delimited JSON files that can be imported into a BigQuery table, with a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) column containing the feature's geometry. Schema files are also generated that can be used for creating the BigQuery tables programmatically or through the BigQuery Console.
 
-The program uses the GDAL library to convert the source file to a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file, and then uses it to create the newline delimited JSON file. The GeoJSONSeq file is deleted afterward, unless the &#x2011;k / &#x2011;&#x2011;keep_geojsonseq option is used.
+The program uses the GDAL library to convert the source file to a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file, and then uses it to create the newline delimited JSON file. The GeoJSONSeq file is deleted afterward, unless the *&#x2011;&#x2011;keep_geojsonseq / &#x2011;k* option is used.
 
 ## Warning
 **This was intended/started as a coding exercise, and is not production-ready code. There is very little error handling or checking if you are about to do something really bad! Use at your own risk!**
@@ -17,9 +17,17 @@ The program uses the GDAL library to convert the source file to a [GeoJSONSeq](h
     - [Positional arguments:](#positional-arguments)
     - [Options](#options)
     - [Examples](#examples)
+      - [Convert a file (no options).](#convert-a-file-no-options)
+      - [Specify the directory to save output files](#specify-the-directory-to-save-output-files)
+      - [Specify the full path to save an output file](#specify-the-full-path-to-save-an-output-file)
+      - [Convert all files in a directory](#convert-all-files-in-a-directory)
+      - [GDAL conversion option to alter the **properties** included in the schema](#gdal-conversion-option-to-alter-the-properties-included-in-the-schema)
+      - [Rename the *geometry* column in the schema.](#rename-the-geometry-column-in-the-schema)
+      - [Only include the *geojson\_geometry* column in the schema.](#only-include-the-geojson_geometry-column-in-the-schema)
+      - [Include all geo columns in the schema.](#include-all-geo-columns-in-the-schema)
   - [Output Files](#output-files)
   - [Tips / Troubleshooting](#tips--troubleshooting)
-    - [Duplicate vertex errors when importing into BigQuery](#duplicate-vertex-errors-when-importing-into-bigquery)
+    - [Duplicate vertex error when importing into BigQuery](#duplicate-vertex-error-when-importing-into-bigquery)
     - [Error creating temporary GeoJSONSeq file](#error-creating-temporary-geojsonseq-file)
   - [TODO](#todo)
 
@@ -58,7 +66,7 @@ python ogr2bqjson.py /source_dir/foo.bar -p -o /output_dir/baz.json -k
 | -k, &#x2011;&#x2011;keep_geojsonseq | Do not delete the GeoJSONSeq files created when a source file is not [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) with a WGS84 reference system. |
 | -p, &#x2011;&#x2011;create_parents | Make directories and parent directories for output files, if they don't already exist. |
 | -s, &#x2011;&#x2011;skip_schemas | Skip generating schema files.|
-| -c, &#x2011;&#x2011;columns | JSON string to limit or rename the columns for geographic data in the output's schema. Use a JSON array literal if you want to set which columns to include without changing their default names. Use a JSON object to set and/or rename columns. "geometry" refers to the column that will contain the geometry as a GEOGRAPHY datatype; "geojson" the column that will have a complete copy of a geo object as a GeoJSON formatted STRING; and "geojson_geometry" the column containing just the geometry object as a GeoJSON formatted STRING. Leaving out a column will result in it being excluded from the schema. Note: only the "geometry" column is included by default. The "geojson" and/or "geojson_geometry" columns can be added manually using this option. |
+| -c, &#x2011;&#x2011;columns | JSON string to limit or rename the columns for geographic data in the output's schema. Use a JSON array literal if you want to set which columns to include without changing their default names. Use a JSON object to set and/or rename columns. "geometry" refers to the column that will contain the geometry as a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) datatype; "geojson" the column that will have a complete copy of a geo object as a GeoJSON formatted STRING; and "geojson_geometry" the column containing just the geometry object as a GeoJSON formatted STRING. Leaving out a column will result in it being excluded from the schema. Note: only the "geometry" column is included by default. The "geojson" and/or "geojson_geometry" columns can be added manually using this option. |
 | -d, &#x2011;&#x2011;output_directory | The path to the directory to save converted files to. The files will be given the same basename as the source, but with .json as the extension. Ignored if the &#x2011;&#x2011;output_filepath option is present. |
 | -e, &#x2011;&#x2011;extension | Extension of the files to convert when the source path is a directory. Cannot be used when the source path is a file. |
 | -o, &#x2011;&#x2011;output_filepath | The full filepath to save the converted file to. If omitted the file will be saved with the same basename and location as the source, but with the .json extension. Cannot be used when the source path is a directory. |
@@ -66,42 +74,72 @@ python ogr2bqjson.py /source_dir/foo.bar -p -o /output_dir/baz.json -k
 
 ### Examples
 
-**Convert a file (no options).** *Output files will be saved to the same directory, using the same basename as the source. In this case: /source_dir/foo.json*
+
+#### Convert a file (no options).
+
+Output files will be saved to the same directory, using the same basename as the source. In this case: /source_dir/foo.json
+
 ```
 python ogr2bqjson.py /source_dir/foo.bar
 ```
 
-**Save to a different directory.**
+
+#### Specify the directory to save output files
+
+**&#x2011;p** is optional, and will automatically create the output directory and its parents if they don't already exist.
+
 ```
-python ogr2bqjson.py -d /output_dir /source_dir/foo.bar
+python ogr2bqjson.py -p -d /output_dir /source_dir/foo.bar
 ```
 
-**Save with a different basename**
+
+#### Specify the full path to save an output file
+
+**&#x2011;f** is optional, and will overwrite any existing file.
+
 ```
-python ogr2bqjson.py -o /source_dir/baz.json /source_dir/foo.bar
+python ogr2bqjson.py -f -o /output_dir/baz.json /source_dir/foo.bar
 ```
 
-**Convert all files with the .shp extension.** *The `-e` option is required, but the `-d` option is not. A trailing `/` in the source or destination directories are not required either.*
+
+#### Convert all files in a directory
+
+**&#x2011;d** is optional, and specifies the directory to save output files to. In this case all files in */source_dir* ending in *.shp* will be converted, and all output files will be saved to */output_dir*.
+
 ```
-python ogr2bqjson.py /source_dir/ -e shp -d /output_dir
+python ogr2bqjson.py -e shp -d /output_dir /source_dir/
 ```
 
-**Limit and/or rename the *properties* attributes in the schema.** *The `=` after `-v` is required if any part of the string contains a hyphen.*
+
+#### GDAL conversion option to alter the **properties** included in the schema
+
+The **&#x2011;v** option must be followed by an **=** if any part of the string contains a hyphen. In this case *attr1* and *attr2* will be the only **properties** included in the schema, and the column for *attr2* will be named *"qux"*.
+
 ```
 python ogr2bqjson.py -v='-sql "SELECT attr1, attr2 AS qux FROM foo"' /source_dir/foo.bar
 ```
 
-**Rename the *geometry* column in the schema.**
+
+#### Rename the *geometry* column in the schema.
+
+In this case the column with the *[GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type)* datatype will be named "coordinates".
+
 ```
 python ogr2bqjson.py -c "{\"geometry\":\"coordinates\"}" /source_dir/foo.bar
 ```
 
-**Only include the *geojson_geometry* column in the schema.**
+
+#### Only include the *geojson_geometry* column in the schema.
+
+This is useful if there is an issue importing data into the [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) datatype column. *See [Duplicate vertex error when importing into BigQuery](#duplicate-vertex-error-when-importing-into-bigquery) for an example*.
+
 ```
 python ogr2bqjson.py -c "[\"geojson_geometry\"]" /source_dir/foo.bar
 ```
 
-**Include all geo columns in the schema.**
+
+#### Include all geo columns in the schema.
+
 ```
 python ogr2bqjson.py -c "[\"geometry\",\"geojson\",\"geojson_geometry\"]" /source_dir/foo.bar
 ```
@@ -120,7 +158,7 @@ python ogr2bqjson.py -c "[\"geometry\",\"geojson\",\"geojson_geometry\"]" /sourc
 
 ## Tips / Troubleshooting
 
-### Duplicate vertex errors when importing into BigQuery
+### Duplicate vertex error when importing into BigQuery
 If you are not able to import the newline delimited JSON file into BigQuery because it complains that an edge has a duplicate vertex with another edge, try the following:
 
 - use the *&#x2011;&#x2011;columns* / *&#x2011;c* option to include the  "geojson_geometry" column, and exclude the "geometry" column (by omitting it). It is your choice whether to include the "geojson" column.
@@ -128,8 +166,12 @@ If you are not able to import the newline delimited JSON file into BigQuery beca
 python ogr2bqjson.py -c "[\"geojson_geometry\]" /source_dir/foo.bar
 ```
 - Import into a new BigQuery table
-- Add a column with the GEOGRAPHY datatype to the table's schema, called *geometry* (or whatever else you want)
-- Use BigQuery's [ST_GEOGFROMGEOJSON()](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogfromgeojson) function in a SQL query to populate the *geometry* column using values from the *geojson_geometry* column. Setting the function's *make_valid* parameter to *TRUE* will have it attempt to repair issues like duplicate vertices during the conversion.
+- Add a column to the table with the [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) datatype (e.g. *geology*)
+
+```sql
+ALTER TABLE my_proj_id.my_ds.my_table ADD COLUMN geometry GEOGRAPHY;
+```
+- Use BigQuery's [ST_GEOGFROMGEOJSON()](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogfromgeojson) function in a SQL query to populate the *geometry* column using the *geojson_geometry* column. Setting the function's *make_valid* parameter to *TRUE* will have it attempt to repair issues, like the duplicate vertex error, during the conversion.
 
 ```sql
 UPDATE my_proj_id.my_ds.my_table SET geometry = ST_GEOGFROMGEOJSON(geojson_geometry, make_valid => TRUE) WHERE geometry IS NULL;
@@ -154,7 +196,11 @@ python ogr2bqjson.py -v='-if "ESRI Shapefile"' /source_dir/foo.bar
 
 ## TODO
 
+*In no particular order*
 - [ ] Unit tests
 - [ ] Fix/prevent duplicate vertex issue, and/or warn the user if there are any
 - [ ] Instructions for loading into BigQuery
 - [ ] Instructions for using in Looker Studio map visualizations
+- [ ] Check if user can write to destination directory
+- [ ] More/better exception handling
+- [ ] Make into a pip installable package
