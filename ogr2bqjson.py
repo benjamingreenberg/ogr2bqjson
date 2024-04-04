@@ -59,7 +59,7 @@ def main():
 
     if not args.skip_schemas:
       path_root = os.path.splitext(output_filepath)[0]
-      save_schema_files(schema, path_root, can_overwrite=args.force_overwrite)
+      save_schema(schema, path_root, can_overwrite=args.force_overwrite)
 
 
 def get_args_parser() -> argparse.ArgumentParser:
@@ -70,9 +70,9 @@ def get_args_parser() -> argparse.ArgumentParser:
   """
   parser = argparse.ArgumentParser(
     description=(
-      'Convert files with simple features data (shp, geojson, etc) to newline '
-      'delimited JSON files that can be imported into BigQuery. Schema files '
-      'are also generated that can be used to create BigQuery tables '
+      'Convert files with simple features data (Shape, GeoJSON, etc) to newline-'
+      'delimited JSON to be imported into a BigQuery table. Schema files '
+      'are also generated that can be used for creating BigQuery tables '
       'programmatically or through the BigQuery Console.'
     )
   )
@@ -473,7 +473,7 @@ def convert_all(
 
       if (not skip_schemas):
         path_root = os.path.splitext(output_filepath)[0]
-        save_schema_files(schema, path_root, can_overwrite=can_overwrite)
+        save_schema(schema, path_root, can_overwrite=can_overwrite)
 
 
 def get_safe_filepath(
@@ -750,60 +750,49 @@ def convert_to_wgs84_geojsonseq(
   ds = None
 
 
-def save_schema_files(
+def save_schema(
     schema: dict,
     path_root: str,
     can_overwrite: bool | None = False) -> None:
-  """Save the schema into json and plaintext files.
+  """Save the schema as a JSON file.
 
-    The json version can be used to create a BigQuery table programmatically.
-    The plaintext version can be used to copy/paste the schema when creating a
-    table using the BigQuery Console.
+  The schema file can be used to define a BigQuery table's schema
+  programmatically or by copy/pasting in the BigQuery Console.
+  See: https://cloud.google.com/bigquery/docs/schemas
 
   Args:
       schema (dict): Schema
-      path_root (str): The directory path and basename to save the schemas to.
+      path_root (str): The directory path and basename to save the schema to.
       can_overwrite (bool | None, optional): Whether to overwrite existing files.
         If not, a unique name will be chosen (see get_safe_filepath() for more
         info). Defaults to False.
   """
+  unknown_columns = []
+  json_schema = []
+  for name, datatype in schema.items():
+    if (datatype == 'UNKNOWN'):
+      unknown_columns.append(name)
+
+    json_schema.append({'name':name, 'type': datatype})
+
   json_filepath = get_safe_filepath(
     path_root  + '_SCHEMA.json',
     can_overwrite
   )
   print((
-    f'Saving schema json file to {json_filepath}. You can use it when creating '
-    'a BigQuery table programmatically.'
+    f'Saving schema file to {json_filepath}. You can use it to define a '
+    'BigQuery table\'s schema programmatically or in the BigQuery Console.\n'
+    'See: https://cloud.google.com/bigquery/docs/schemas'
   ))
   with open(json_filepath, 'w+') as json_file:
-    json.dump(schema, json_file)
-
-  plaintext_filepath = get_safe_filepath(
-    path_root  + '_SCHEMA.txt',
-    can_overwrite
-  )
-  print((
-    f'Saving plaintext schema file to {plaintext_filepath}. You can use it to '
-    'copy/paste the schema when creating a table using the BigQuery Console.'
-  ))
-  schema_text = ''
-  unknown_columns = []
-  for key in schema.keys():
-    schema_text += key + ":" + schema[key] + ",\n"
-    if (schema[key] == 'UNKNOWN'):
-      unknown_columns.append(key)
-
-  # Remove trailing comma and newline
-  schema_text = schema_text[:-2]
-  with open(plaintext_filepath, 'w+') as text_file:
-    text_file.write(schema_text)
+    json.dump(json_schema, json_file)
 
   if len(unknown_columns) > 0:
     print((
       '\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
       'Schema has one or more columns whose values could not be determined:\n'
       f'\t\t{", ".join(unknown_columns)}\n'
-      'Edit the schema files and enter the proper datatype(s) before using them'
+      'Edit the schema file and enter the proper datatype(s) before using them\n'
     ))
 
 

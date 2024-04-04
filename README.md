@@ -1,6 +1,6 @@
 # ogr2bqjson
 
-Convert files with simple features data (Shape, GeoJSON, etc) to newline delimited JSON files that can be imported into a BigQuery table with a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) column for the feature's geometry. Schema files are also generated that can be used for creating the BigQuery tables programmatically or through the BigQuery Console.
+Convert files with simple features data (Shape, GeoJSON, etc) to [newline-delimited JSON](https://jsonlines.org/) to be [imported into a BigQuery table](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json) with the feature's geometry in a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) column. [Schema files](https://cloud.google.com/bigquery/docs/schemas) are also generated that can be used for creating BigQuery tables programmatically or through the BigQuery Console.
 
 ogr2bqjson gets its name from GDAL's [ogr2ogr](https://gdal.org/programs/ogr2ogr.html) program. The GDAL library is used to convert the source file to a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file, using it to then create the newline-delimited JSON file. The GeoJSONSeq file is deleted afterward, unless the *&#x2011;&#x2011;keep_geojsonseq / &#x2011;k* option is used.
 
@@ -54,9 +54,7 @@ This was created as a coding exercise, and is not production-ready code. **Use a
 
   - **geojson**: The entire feature, including *properties* and *geometry*, as a GeoJSON WGS84 formatted string, intended to be imported as a *STRING* datatype. The *geojson* column is excluded from the schema by default. [Use the &#x2011;&#x2011;columns / &#x2011;c option to include it](#include-all-geo-columns-in-the-schema).
 
-- **filename_SCHEMA.json**: A file containing a json version of the schema that can be used to programmatically create a table in BigQuery. Use the *&#x2011;&#x2011;skip_schema* option to prevent this file from being created
-
-- **filename_SCHEMA.txt**: A plaintext file that can be used to copy/paste the schema when using the BigQuery Console to create a table. Use the *&#x2011;&#x2011;skip_schema* option to prevent this file from being created
+- **filename_SCHEMA.json**: A file containing a json version of the schema that can be used to [define a BigQuery table's schema](https://cloud.google.com/bigquery/docs/schemas) programmatically or by copy/pasting in the BigQuery Console. Use the *&#x2011;&#x2011;skip_schemas* option to prevent this file from being created
 
 - **filename_GeoJSONSeq.geojson**: The GeoJSONSeq file temporalty created, and then deleted, during the conversion process. Use the *&#x2011;&#x2011;keep_geojsonseq* / *&#x2011;k* option to prevent this file from being deleted.
 
@@ -91,7 +89,7 @@ python ogr2bqjson.py /source_dir/foo.bar -p -o /output_dir/baz.json -k
 | -f, &#x2011;&#x2011;force_overwrite | Overwrite files if they already exist, otherwise an underscore and number ("_n") will be appended to the output file's name: duplicate_01.json, duplicate_02.json, etc. |
 | -k, &#x2011;&#x2011;keep_geojsonseq | Do not delete the GeoJSONSeq files created when a source file is not [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) with a WGS84 reference system. |
 | -p, &#x2011;&#x2011;create_parents | Make directories and parent directories for output files, if they don't already exist. |
-| -s, &#x2011;&#x2011;skip_schemas | Skip generating schema files.|
+| -s, &#x2011;&#x2011;skip_schemas | Skip generating schema file.|
 | -c, &#x2011;&#x2011;columns | JSON string to limit or rename the columns for geographic data in the output's schema. Use a JSON array literal if you want to set which columns to include without changing their default names. Use a JSON object to set and/or rename columns. "geometry" refers to the column that will contain the geometry as a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) datatype; "geojson" the column that will have a complete copy of a geo object as a GeoJSON formatted STRING; and "geojson_geometry" the column containing just the geometry object as a GeoJSON formatted STRING. Leaving out a column will result in it being excluded from the schema. Note: only the "geometry" column is included by default. The "geojson" and/or "geojson_geometry" columns can be added manually using this option. |
 | -d, &#x2011;&#x2011;output_directory | The path to the directory to save converted files to. The files will be given the same basename as the source, but with .json as the extension. Ignored if the &#x2011;&#x2011;output_filepath option is present. |
 | -e, &#x2011;&#x2011;extension | Extension of the files to convert when the source path is a directory. Cannot be used when the source path is a file. |
