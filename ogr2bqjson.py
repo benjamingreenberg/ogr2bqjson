@@ -62,7 +62,12 @@ def main():
       save_schema_files(schema, path_root, can_overwrite=args.force_overwrite)
 
 
-def get_args_parser():
+def get_args_parser() -> argparse.ArgumentParser:
+  """Initializes and configures parser
+
+  Returns:
+      argparse.ArgumentParser: The parser object
+  """
   parser = argparse.ArgumentParser(
     description=(
       'Convert files with simple features data (shp, geojson, etc) to newline '
@@ -281,7 +286,18 @@ def is_output_directory_safe(
   return can_create_parents or os.path.exists(dir_path)
 
 
-def get_output_file_args_errors(output_filepath, can_overwrite, can_create_parents ) -> str | None:
+def get_output_file_args_errors(output_filepath: str, can_overwrite: bool, can_create_parents:bool ) -> str | None:
+  """Find problems with the output_filepath and return their description.
+
+  Args:
+      output_filepath (str): Value given for the output_filepath option
+      can_overwrite (bool): If allowed to overwrite a file if it exists.
+      can_create_parents (bool): Whether it is allowed to create missing
+        directories or their parents.
+
+  Returns:
+      str | None: The description of the first problem encountered, if any.
+  """
   if output_filepath:
     if is_output_file_safe(output_filepath, can_overwrite) is False:
       safe_file = get_safe_filepath(output_filepath)
@@ -360,7 +376,15 @@ def create_missing_directories( path:str, is_dir:bool | None = False ) -> bool:
   return True
 
 
-def get_columns( columns_args ):
+def get_columns( columns_args: str ) -> dict:
+  """Determine geo columns to include based on the arg value, and return them.
+
+  Args:
+      columns_args (str): JSON containing the types and names of columns wanted.
+
+  Returns:
+      dict: Key / Value pair consisting of column type / column name.
+  """
   if columns_args == '':
     print('--columns / -c contained an empty string. No geographic columns will '
           'be included in the schema.')
