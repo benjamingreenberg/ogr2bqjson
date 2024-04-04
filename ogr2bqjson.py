@@ -101,21 +101,23 @@ def add_args_to_parser(parser: argparse.ArgumentParser) -> None:
   parser.add_argument(
     '-c',
     '--columns',
-    default='{"geometry":"geometry","geojson":"geojson"}',
+    default='{"geometry":"geometry"}',
     help=(
       'JSON string to limit or rename the columns for geographic data in the '
-      'output\'s schema. Use a JSON array literal if you want to limit which '
-      'columns to include without changing their default names, and a JSON '
-      'object to limit and/or rename columns. "geometry" refers to the '
+      'output\'s schema. Use a JSON array literal if you want to set which '
+      'columns to include without changing their default names. Use a JSON '
+      'object to set and/or rename columns. "geometry" refers to the '
       'column that will contain the geometry as a GEOGRAPHY datatype; "geojson" '
       'the column that will have a complete copy of a geo object as a GeoJSON '
       'formatted STRING; and "geojson_geometry" the column containing just the '
       'geometry object as a GeoJSON formatted STRING. Leaving out a column will '
-      'result in it being excluded from the schema. Note: the "geojson_geometry" '
-      'column is excluded by default. See --convert_options / -v for info '
-      'about limiting or renaming the "properties" columns. Examples:\n'
-      'Rename columns: -c "{\\"geometry\\":\\"foo\\",\\"geojson\\":\\"bar\\"}"\n'
-      'Include geojson_geometry: -c "[\\"geometry\\",\\"geojson\\"\\"geojson_geometry\\"]'
+      'result in it being excluded from the schema. Note: only the "geometry" '
+      'column is included by default. The "geojson" and/or "geojson_geometry" '
+      'columns can be added manually using this option. See '
+      '--convert_options / -v for info about limiting or renaming the '
+      '"properties" columns. Examples: '
+      'Include all columns: -c "[\\"geometry\\",\\"geojson\\"\\"geojson_geometry\\"] '
+      'Rename geometry column: -c "{\\"geometry\\":\\"coordinates\\"}"'
     )
   )
   parser.add_argument('-d', '--output_directory', help=(
