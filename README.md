@@ -4,26 +4,30 @@ Convert files with simple features data (Shape, GeoJSON, etc) to newline delimit
 
 The program uses the GDAL library to convert the source file to a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file, and then uses it to create the newline delimited JSON file. The GeoJSONSeq file is deleted afterward, unless the &#x2011;k / &#x2011;&#x2011;keep_geojsonseq option is used.
 
-**WARNING: This was intended/started as a coding exercise, and is not production-ready code. There is very little error handling or checking if you are about to do something really bad! Use at your own risk!**
+## Warning
+**This was intended/started as a coding exercise, and is not production-ready code. There is very little error handling or checking if you are about to do something really bad! Use at your own risk!**
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Usage](#usage)
-  - [Positional arguments:](#positional-arguments)
-  - [Options](#options)
-  - [Examples](#examples)
-- [Output Files](#output-files)
-- [Tips / Troubleshooting](#tips--troubleshooting)
-  - [Duplicate vertex errors when importing into BigQuery](#duplicate-vertex-errors-when-importing-into-bigquery)
-  - [Error creating temporary GeoJSONSeq file](#error-creating-temporary-geojsonseq-file)
-- [TODO](#todo)
+- [OGR 2 BigQuery JSON](#ogr-2-bigquery-json)
+  - [Warning](#warning)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Usage](#usage)
+    - [Positional arguments:](#positional-arguments)
+    - [Options](#options)
+    - [Examples](#examples)
+  - [Output Files](#output-files)
+  - [Tips / Troubleshooting](#tips--troubleshooting)
+    - [Duplicate vertex errors when importing into BigQuery](#duplicate-vertex-errors-when-importing-into-bigquery)
+    - [Error creating temporary GeoJSONSeq file](#error-creating-temporary-geojsonseq-file)
+  - [TODO](#todo)
 
 ## Prerequisites
 
 - Python 3.10.x (this was developed with Python 3.10.12, but an earlier version may work).
 - [GDAL](https://gdal.org) installed on your system
-  - On Ubuntu 22.04.03, the following installed all necessary packages: `sudo apt install gdal-bin libgdal-dev`. You can add *python3-gdal* to the package list, but in my case it was included as an "*additional package*" when installing *gdal-bin*.
+  - On Ubuntu 22.04.03, the following installed all necessary packages: `sudo apt install gdal-bin libgdal-dev python3-gdal`.
 - Python bindings for your version of GDAL, which ideally would be what `pip install GDAL` installs by default. However, I needed an earlier/specific version to match my native GDAL library (3.4.1, the version specified in requirements.txt). Try this if pip is giving errors when installing GDAL: `pip install GDAL=="$(gdal-config --version).*"` See the [*pip* section of the GDAL documentation](https://gdal.org/api/python_bindings.html#pip).
 
 ## Usage
@@ -112,7 +116,7 @@ python ogr2bqjson.py -c "[\"geometry\",\"geojson\",\"geojson_geometry\"]" /sourc
   - One column for each item within the *properties* member of the features
 - **filename_SCHEMA.json**: A file containing a json version of the schema that can be used to programmatically create a table in BigQuery. Use the *&#x2011;&#x2011;skip_schema* option to prevent this file from being created
 - **filename_SCHEMA.txt**: A plaintext file that can be used to copy/paste the schema when using the BigQuery Console to create a table. Use the *&#x2011;&#x2011;skip_schema* option to prevent this file from being created
-- **filename_GeoJSONSeq.geojson**: The GeoJSONSeq file temporalty created, and then deleted, during the conversion process.
+- **filename_GeoJSONSeq.geojson**: The GeoJSONSeq file temporalty created, and then deleted, during the conversion process. Use the *&#x2011;&#x2011;keep_geojsonseq* / *&#x2011;k* option to prevent this file from being deleted.
 
 ## Tips / Troubleshooting
 
@@ -152,3 +156,5 @@ python ogr2bqjson.py -v='-if "ESRI Shapefile"' /source_dir/foo.bar
 
 - [ ] Unit tests
 - [ ] Fix/prevent duplicate vertex issue, and/or warn the user if there are any
+- [ ] Instructions for loading into BigQuery
+- [ ] Instructions for using in Looker Studio map visualizations
