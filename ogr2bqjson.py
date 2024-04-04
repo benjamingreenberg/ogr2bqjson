@@ -756,9 +756,9 @@ def save_schema(
     can_overwrite: bool | None = False) -> None:
   """Save the schema as a JSON file.
 
-  The schema file can be used to define a BigQuery table's schema
+  The schema file can be used to specify a BigQuery table's schema
   programmatically or by copy/pasting in the BigQuery Console.
-  See: https://cloud.google.com/bigquery/docs/schemas
+  See: https://cloud.google.com/bigquery/docs/schemas#specify_schemas
 
   Args:
       schema (dict): Schema
@@ -782,7 +782,7 @@ def save_schema(
   print((
     f'Saving schema file to {json_filepath}. You can use it to define a '
     'BigQuery table\'s schema programmatically or in the BigQuery Console.\n'
-    'See: https://cloud.google.com/bigquery/docs/schemas'
+    'See: https://cloud.google.com/bigquery/docs/schemas#specify_schemas'
   ))
   with open(json_filepath, 'w+') as json_file:
     json.dump(json_schema, json_file)

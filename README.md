@@ -1,6 +1,6 @@
 # ogr2bqjson
 
-Convert files with simple features data (Shape, GeoJSON, etc) to [newline-delimited JSON](https://jsonlines.org/) for [importing into a BigQuery table](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json) with the feature's geometry in a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) column. Schema files are also generated that can be used to [define a BigQuery table's schema](https://cloud.google.com/bigquery/docs/schemas) programmatically or through the BigQuery Console.
+Convert files with simple features data (Shape, GeoJSON, etc) to [newline-delimited JSON](https://jsonlines.org/) for [importing into a BigQuery table](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-json) with the feature's geometry in a [GEOGRAPHY](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type) column. Schema files are also generated that can be used to [specify a BigQuery table's schema](https://cloud.google.com/bigquery/docs/schemas#specify_schemas) programmatically or through the BigQuery Console.
 
 ogr2bqjson gets its name from GDAL's [ogr2ogr](https://gdal.org/programs/ogr2ogr.html) program. The GDAL library is used to convert the source file to a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file, using it to then create the newline-delimited JSON file. The GeoJSONSeq file is deleted afterward, unless the *&#x2011;&#x2011;keep_geojsonseq / &#x2011;k* option is used.
 
@@ -54,7 +54,7 @@ This was created as a coding exercise, and is not production-ready code. **Use a
 
   - **geojson**: The entire feature, including *properties* and *geometry*, as a GeoJSON WGS84 formatted string, intended to be imported as a *STRING* datatype. The *geojson* column is excluded from the schema by default. [Use the &#x2011;&#x2011;columns / &#x2011;c option to include it](#include-all-geo-columns-in-the-schema).
 
-- **filename_SCHEMA.json**: A file containing a json version of the schema that can be used to [define a BigQuery table's schema](https://cloud.google.com/bigquery/docs/schemas) programmatically or by copy/pasting in the BigQuery Console. Use the *&#x2011;&#x2011;skip_schemas* option to prevent this file from being created
+- **filename_SCHEMA.json**: A file containing a json version of the schema that can be used to [specify a BigQuery table's schema](https://cloud.google.com/bigquery/docs/schemas#specify_schemas) programmatically or by copy/pasting in the BigQuery Console. Use the *&#x2011;&#x2011;skip_schemas* option to prevent this file from being created
 
 - **filename_GeoJSONSeq.geojson**: The GeoJSONSeq file temporalty created, and then deleted, during the conversion process. Use the *&#x2011;&#x2011;keep_geojsonseq* / *&#x2011;k* option to prevent this file from being deleted.
 
