@@ -254,7 +254,7 @@ Finally click the *Create Table* button
 
 ### Determine precincts for locations using coordinates and precinct geometry
 
-You can download GeoJSON files containing coordinates (geometry type Point) for addresses within a region from [OpenAddresses](https://openaddresses.io/). You can download shape files of precincts (geometry type Polygon) from most state's board of election website. You want to know what precinct each address is located in.
+[OpenAddresses](https://openaddresses.io/) lets you download GeoJSON files containing coordinates (geometry type Point) for addresses within a region. You can download shape files of precincts (geometry type Polygon) from the Board of Election website of many US states. Let's say we want to know what precinct each address is located in.
 
 To make the SQL code easier to understand, let's [change the name of the *geometry* column](#rename-the-geometry-column-in-the-schema) for the addresses to *coordinates*, and the one for precincts to *precinct_geom*.
 
@@ -268,7 +268,7 @@ python ogr2bqjson.py -c "{\"geometry\":\"precinct_geom\"}" precincts.shp
 
 Use the converted files to [create BigQuery tables](#import-into-a-new-bigquery-table-using-the-bigquery-console), one called *addresses*, and the other *precincts*.
 
-We see in the precinct table's schema that there is a STRING column called *precinct_id*. This column exists because the *properties* member of the shapefile had this as one of its *attributes*. Let's add a *precinct_id* column to the addresses table.
+We see in the *precincts* table's schema that there is a STRING column called *precinct_id*. This column exists because the *properties* member of the shapefile had this as one of its *attributes*. Let's add a *precinct_id* column to the *addresses* table.
 
 ```sql
 ALTER TABLE my_project.geography.addresses ADD COLUMN precinct_id STRING;
@@ -286,7 +286,7 @@ WHERE ST_WITHIN(a.coordinates, p.precinct_geom);
 You can read this SQL statement as:<br />
 > *Set the precinct_id of an address to the precinct_id of a precinct if the address coordinates are within the precinct's precinct_geom*
 
-As long as precincts don't overlap, which they shouldn't, then there will be at most one precinct for each address.
+As long as precincts don't overlap, which they shouldn't, there will be at most one precinct for each address.
 
 If you have a pre-existing address table with columns for latitude and longitude, you can use the [ST_GEOPOINT](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#st_geogpoint) function to perform the UPDATE:
 
